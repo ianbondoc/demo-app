@@ -1,9 +1,14 @@
-import React from "react";
-import { UserService } from "./services";
+import React, { useState } from "react";
+import { HttpService, UserService } from "./services";
 import { RenderForAuthenticated } from "./components/RenderForAuthenticated";
 import { RenderForAnonymous } from "./components/RenderForAnonymous";
 
-function App() {
+interface Message {
+  content: string;
+}
+
+export function App() {
+  const [message, setMessage] = useState<string>();
   return (
     <div>
       <h1>
@@ -21,8 +26,23 @@ function App() {
       <RenderForAnonymous>
         <button onClick={() => UserService.login()}>Login</button>
       </RenderForAnonymous>
+      <button
+        onClick={async () => {
+          try {
+            const response = await HttpService.get<Message>("/api/hello");
+            setMessage(response.content);
+          } catch (e) {
+            if (e instanceof Error) {
+              setMessage(`Error: ${e.message}`);
+            } else {
+              setMessage(`Unknown error: ${e}`);
+            }
+          }
+        }}
+      >
+        Call Service
+      </button>
+      {message && <p>Server says: {message}</p>}
     </div>
   );
 }
-
-export default App;

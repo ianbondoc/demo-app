@@ -2,7 +2,10 @@ import Keycloak from "keycloak-js";
 
 const keycloak = Keycloak("/keycloak.json");
 
-const initKeycloak = (onAuthenticateCallback: () => void) => {
+const initKeycloak = (
+  onAuthenticateCallback: () => void,
+  onErrorCallback: (message: string) => void
+) => {
   keycloak
     .init({
       onLoad: "check-sso",
@@ -17,12 +20,22 @@ const initKeycloak = (onAuthenticateCallback: () => void) => {
       }
       onAuthenticateCallback();
     })
-    .catch(console.error);
+    .catch((reason) => onErrorCallback(reason.error));
 };
 
-const isAuthenticated = () => keycloak.authenticated;
+const isAuthenticated = () => !!keycloak.authenticated;
 const login = () => keycloak.login();
 const logout = () => keycloak.logout();
+
+const getToken = () => keycloak.token;
+const updateToken = async () => {
+  try {
+    await keycloak.updateToken(5);
+  } catch (e) {
+    login();
+    throw e;
+  }
+};
 
 const getUsername = () => keycloak.tokenParsed?.preferred_username;
 const getName = () => keycloak.tokenParsed?.name;
@@ -40,4 +53,6 @@ export const UserService = {
   getGivenName,
   getSurname,
   getEmail,
+  getToken,
+  updateToken,
 };
