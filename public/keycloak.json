@@ -1,8 +1,8 @@
 {
-  "realm": "demo-app",
+  "realm": "landonline",
   "auth-server-url": "http://localhost:8080/",
   "ssl-required": "external",
-  "resource": "demo-app-frontend",
+  "resource": "search-app",
   "public-client": true,
   "confidential-port": 0
 }

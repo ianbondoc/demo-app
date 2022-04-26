@@ -1,7 +1,11 @@
-import React, { useState } from "react";
-import { HttpService, UserService } from "./services";
-import { RenderForAuthenticated } from "./components/RenderForAuthenticated";
-import { RenderForAnonymous } from "./components/RenderForAnonymous";
+import React, { useEffect, useState } from "react";
+import {
+  Anonymous,
+  Authenticated,
+  HttpService,
+  UserService,
+  useUserContext,
+} from "@chiknrice/auth-js";
 
 interface Message {
   content: string;
@@ -9,23 +13,30 @@ interface Message {
 
 export function App() {
   const [message, setMessage] = useState<string>();
+  const { user, error } = useUserContext();
+
+  useEffect(() => {
+    if (error) {
+      alert(JSON.stringify(error));
+    }
+  }, [error]);
+
   return (
     <div>
-      <h1>
-        Hello {UserService.isAuthenticated() ? UserService.getName() : "guest"}
-      </h1>
-      <RenderForAuthenticated>
+      <h1>Hello {user?.preferredName || "guest"}</h1>
+      <Authenticated>
         <ul>
-          <li>username: {UserService.getUsername()}</li>
-          <li>given name: {UserService.getGivenName()}</li>
-          <li>surname: {UserService.getSurname()}</li>
-          <li>email: {UserService.getEmail()}</li>
+          <li>username: {user?.id}</li>
+          <li>given name: {user?.givenNames}</li>
+          <li>surname: {user?.surname}</li>
+          <li>email: {user?.email}</li>
+          <li>userInfo: {JSON.stringify(user)}</li>
         </ul>
         <button onClick={() => UserService.logout()}>Logout</button>
-      </RenderForAuthenticated>
-      <RenderForAnonymous>
+      </Authenticated>
+      <Anonymous>
         <button onClick={() => UserService.login()}>Login</button>
-      </RenderForAnonymous>
+      </Anonymous>
       <button
         onClick={async () => {
           try {
