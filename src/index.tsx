@@ -2,12 +2,16 @@ import React from "react";
 import ReactDOM from "react-dom";
 import "./index.css";
 import { App } from "./App";
-import { UserContextProvider } from "@chiknrice/auth-js";
+import { FetchProvider, UserContextProvider } from "@chiknrice/auth-js";
 
 ReactDOM.render(
   <React.StrictMode>
     <UserContextProvider>
-      <App />
+      <FetchProvider
+        baseUrl="http://localhost:8081" // service's base Url
+      >
+        <App />
+      </FetchProvider>
     </UserContextProvider>
   </React.StrictMode>,
   document.getElementById("root")

@@ -1,19 +1,16 @@
 import React, { useEffect, useState } from "react";
-import {
-  Anonymous,
-  Authenticated,
-  HttpService,
-  UserService,
-  useUserContext,
-} from "@chiknrice/auth-js";
+import useFetch from "use-http";
+import { Anonymous, Authenticated, useUserContext } from "@chiknrice/auth-js";
 
-interface Message {
-  content: string;
+interface Response {
+  message: string;
 }
 
 export function App() {
+  const { isLoading, isAuthenticated, user, login, logout, error } =
+    useUserContext();
+  const { post, response, loading, error: fetchError } = useFetch<Response>();
   const [message, setMessage] = useState<string>();
-  const { user, error } = useUserContext();
 
   useEffect(() => {
     if (error) {
@@ -21,9 +18,20 @@ export function App() {
     }
   }, [error]);
 
+  const fetchMessage = async () => {
+    const body = await post("/api/hello", { sender: "ian" });
+    if (response.ok) setMessage(body.message);
+  };
+
+  if (isLoading) {
+    return <h1>Loading...</h1>;
+  }
+
   return (
     <div>
-      <h1>Hello {user?.preferredName || "guest"}</h1>
+      {isAuthenticated && <p>Authenticated</p>}
+      {!isAuthenticated && <p>Not Authenticated</p>}
+      <h1>Hello {isAuthenticated ? user?.preferredName : "guest"}</h1>
       <Authenticated>
         <ul>
           <li>username: {user?.id}</li>
@@ -32,28 +40,17 @@ export function App() {
           <li>email: {user?.email}</li>
           <li>userInfo: {JSON.stringify(user)}</li>
         </ul>
-        <button onClick={() => UserService.logout()}>Logout</button>
+        <button onClick={() => logout()}>Logout</button>
       </Authenticated>
       <Anonymous>
-        <button onClick={() => UserService.login()}>Login</button>
+        <button onClick={() => login()}>Login</button>
       </Anonymous>
-      <button
-        onClick={async () => {
-          try {
-            const response = await HttpService.get<Message>("/api/hello");
-            setMessage(response.content);
-          } catch (e) {
-            if (e instanceof Error) {
-              setMessage(`Error: ${e.message}`);
-            } else {
-              setMessage(`Unknown error: ${e}`);
-            }
-          }
-        }}
-      >
-        Call Service
-      </button>
-      {message && <p>Server says: {message}</p>}
+      <button onClick={fetchMessage} disabled={loading}>Call Service</button>
+      {loading && <p>Loading...</p>}
+      {!loading && !fetchError && message && <p>Server says: {message}</p>}
+      {!loading && fetchError && (
+        <p>Error calling backend: {JSON.stringify(fetchError)}</p>
+      )}
     </div>
   );
 }
